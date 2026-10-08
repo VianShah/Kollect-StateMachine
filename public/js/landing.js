@@ -1,7 +1,7 @@
 // Demo picker landing screen — precedes the Kollect capture flow. Kollect is
 // the one live demo; AgentX has no destination yet, LeadX links out to its
 // own standalone deployment (set by the user, not part of this app).
-const LEADX_URL = 'https://leadx-predixion-ai.netlify.app/';
+const LEADX_URL = 'https://leadx-statemachine.onrender.com/';
 
 function enterKollectDemo(){
   if (window.track) track('landing_start_demo', {});
