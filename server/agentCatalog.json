@@ -127,8 +127,9 @@
     "personaTone": "Friendly",
     "badge": "Mpokket agent",
     "client": "mPokket",
-    "appId": "Predixion-A-0127b3d3-b7da",
-    "appVersion": 3,
+    "appId": "Kollectt-cce240b7-cb98",
+    "appVersion": 1,
+    "variables": ["user_name"],
     "description": "Engaging cold-sales voice tuned for mPokket instant personal loans. Pitch loan offers, qualify borrower eligibility, and answer product questions.",
     "languages": [
       "Hindi",

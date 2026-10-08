@@ -8,7 +8,6 @@ function enterKollectDemo(){
   goTo('screen-capture');
 }
 
-document.getElementById('btnLandingStartDemo').addEventListener('click', enterKollectDemo);
 document.getElementById('btnLandingStartKollect').addEventListener('click', enterKollectDemo);
 // Whole-card tap, not just the pill inside it — a bigger, more forgiving
 // touch target at a booth kiosk, and the same affordance LeadX's card

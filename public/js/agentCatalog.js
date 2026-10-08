@@ -433,9 +433,11 @@ function renderModalPanel(kind, agent, seed){
   }
   if (kind === 'history') {
     const list = (agent.appVersion || agent.appId) ? [
-      { version: `v${agent.appVersion || 3}.0`, tag: 'Active Deployment', note: `Deployed on Sarvam Samvaad (App: ${agent.appId || 'Predixion-A-0127b3d3-b7da'}), optimized for ${agent.client || 'mPokket'} cold-sales outreach.` },
-      { version: 'v2.0', tag: '', note: 'Objection handling and callback scheduling tuned for instant personal loans.' },
-      { version: 'v1.0', tag: '', note: 'Initial production release.' },
+      { version: `v${agent.appVersion || 3}.0`, tag: 'Active Deployment', note: `Deployed on Sarvam Samvaad (App: ${agent.appId || 'Predixion-A-0127b3d3-b7da'}), optimized for ${agent.client || 'mPokket'} ${agent.line === 'Collections' ? 'collections' : 'cold-sales'} outreach.` },
+      ...(agent.appVersion > 1 ? [
+        { version: 'v2.0', tag: '', note: agent.line === 'Collections' ? 'Payment-date negotiation and callback scheduling tuned for overdue EMIs.' : 'Objection handling and callback scheduling tuned for instant personal loans.' },
+        { version: 'v1.0', tag: '', note: 'Initial production release.' },
+      ] : []),
     ] : VERSION_HISTORY_TEMPLATE;
     panel.innerHTML = `<div class="modal-panel-list">${list.map(v => `
       <div class="modal-panel-row">

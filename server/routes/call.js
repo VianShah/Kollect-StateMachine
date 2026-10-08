@@ -14,6 +14,20 @@ const router = express.Router();
 // dialed is resolved here from the orb the attendee picked — the client only
 // ever sends voiceId, never an agent_id, so it can't be spoofed into calling
 // a different agent than the one it displayed.
+function catalogVariablesFor(appId) {
+  try {
+    const found = require('../agentCatalog.json').find(a => a.appId === appId);
+    return found && Array.isArray(found.variables) ? found.variables : undefined;
+  } catch (_) { return undefined; }
+}
+
+function catalogValuesFor(appId) {
+  try {
+    const found = require('../agentCatalog.json').find(a => a.appId === appId);
+    return found && found.values && typeof found.values === 'object' ? found.values : undefined;
+  } catch (_) { return undefined; }
+}
+
 router.post('/call', async (req, res) => {
   const { name, phone, voiceId, lang, firstMessage, archetypeId, overdueDays, enhancedQuality, useCase, allowFallback, agentId, sarvamAppId, sarvamAppVersion } = req.body || {};
   if (!name || !phone) {
@@ -67,6 +81,10 @@ router.post('/call', async (req, res) => {
       useCase: resolvedUseCase,
       appId: effectiveAppId,
       appVersion: effectiveAppVersion,
+      // A catalog agent can declare its own input variables (e.g. Kollectt
+      // takes only user_name); otherwise the use-case default list applies.
+      variables: catalogVariablesFor(effectiveAppId),
+      values: catalogValuesFor(effectiveAppId),
     });
     const dispatchedOk = sarvamResult.httpStatus >= 200 && sarvamResult.httpStatus < 300 && !!sarvamResult.body.call_id;
     if (dispatchedOk) {

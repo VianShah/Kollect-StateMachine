@@ -60,7 +60,7 @@ async function fetchJson(url, opts) {
 //   sales: ONLY `user_name` as input (user-confirmed 2026-09-30) —
 //     `call_summary` is an OUTPUT this agent writes back after the call,
 //     not something to send in.
-async function placeCall({ customerPhone, customerName, overdueDays, useCase, appId, appVersion }) {
+async function placeCall({ customerPhone, customerName, overdueDays, useCase, appId, appVersion, variables, values }) {
   const resolvedUseCase = useCase === 'sales' ? 'sales' : 'collections';
   const app = config.sarvam.apps[resolvedUseCase];
   const targetAppId = appId || app.appId;
@@ -91,8 +91,17 @@ async function placeCall({ customerPhone, customerName, overdueDays, useCase, ap
     link_live: 'https://xyzbank.example/pay',
     attempt_no_month: '1',
   };
+  if (values) {
+    // Per-agent demo data (catalog `values`) overrides the generic set. The
+    // due date is derived from dpd so the two never contradict each other.
+    Object.assign(available, values);
+    if (!values.emi_due_date) {
+      const d = new Date(); d.setDate(d.getDate() - Number(available.dpd || 0));
+      available.emi_due_date = d.toISOString().slice(0, 10);
+    }
+  }
   const agentVariables = {};
-  (app.variables || []).forEach(k => { if (k in available) agentVariables[k] = available[k]; });
+  (variables || app.variables || []).forEach(k => { if (k in available) agentVariables[k] = available[k]; });
 
   const payload = {
     app_config: {

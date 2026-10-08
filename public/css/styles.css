@@ -956,6 +956,10 @@ body{
 }
 .btn-direct-trigger:active { transform: translateY(0); }
 
+/* Link variant: same pill as the other topbar buttons, but an <a>. */
+a.btn-direct-trigger { text-decoration: none; white-space: nowrap; }
+a.btn-direct-trigger:visited { color: #fff; }
+
 /* Mock is the default look (matches Direct Call button). Live is
    deliberately alarming — real sends cost money. */
 .btn-direct-trigger.whatsapp-live-armed {
@@ -1354,7 +1358,9 @@ body{
 .orbs-actions{margin-top:6px; width:100%; max-width:300px; position:relative; z-index:2;}
 
 /* ---------- ARCHETYPE SELECT ---------- */
-#screen-archetype{flex-direction:column; align-items:center; justify-content:center; padding:40px;}
+#screen-archetype, #screen-usecase{flex-direction:column; align-items:center; justify-content:center; padding:40px;}
+#screen-usecase .arch-grid{align-items:start;}
+#screen-usecase.active{display:flex;}
 .arch-head{text-align:center; margin-bottom:28px;}
 .arch-head .eyebrow{font-size:11.5px; color:var(--blue); text-transform:uppercase; letter-spacing:1px; font-weight:700; margin-bottom:10px;}
 .arch-head h1{font-size:24px; font-weight:700; letter-spacing:-.3px; margin-bottom:8px;}
