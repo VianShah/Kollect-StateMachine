@@ -129,7 +129,15 @@
     "client": "mPokket",
     "appId": "Kollectt-cce240b7-cb98",
     "appVersion": 1,
-    "variables": ["user_name"],
+    "variables": ["customer_name", "dpd", "emi_amount", "emi_due_date", "outstanding_amount", "overdue_amount", "today_date", "prior_context", "attempt_no_month"],
+    "values": {
+      "dpd": "5",
+      "emi_amount": "3500",
+      "outstanding_amount": "3500",
+      "overdue_amount": "3500",
+      "prior_context": "First reminder about an overdue instant personal loan EMI. The customer has not yet been contacted this month.",
+      "attempt_no_month": "1"
+    },
     "description": "Engaging cold-sales voice tuned for mPokket instant personal loans. Pitch loan offers, qualify borrower eligibility, and answer product questions.",
     "languages": [
       "Hindi",
