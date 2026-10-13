@@ -236,6 +236,46 @@
     }
   },
   {
+    "id": "mpokket-uat-kollect",
+    "name": "Kollect UAT",
+    "gender": "Female",
+    "service": "Retail debt collections",
+    "line": "Collections",
+    "products": [
+      "Personal Loan"
+    ],
+    "stage": "Bucket 2",
+    "objective": "Payment collection",
+    "personaTone": "Firm",
+    "toneNote": "Urgent & bold",
+    "badge": "Mpokket UAT",
+    "client": "Mpokket UAT",
+    "appId": "Conversatio-c1510ed0-53b4",
+    "appVersion": 2,
+    "variables": ["customer_name", "dpd", "emi_amount", "emi_due_date", "overdue_amount", "today_date", "prior_context"],
+    "values": {
+      "dpd": "15",
+      "emi_amount": "4500",
+      "overdue_amount": "4500"
+    },
+    "description": "UAT build of the Kollect collections voice for Mpokket. Direct, bold and urgent: states the overdue amount up front and pushes for payment today.",
+    "languages": [
+      "Hindi",
+      "English",
+      "Hinglish"
+    ],
+    "rating": null,
+    "status": "Dev",
+    "real": true,
+    "provider": "Sarvam (Samvaad)",
+    "minutesSpoken": 0,
+    "performance": {
+      "latencyMs": 600,
+      "wordsPerMin": 165,
+      "qcScore": 92.0
+    }
+  },
+  {
     "id": "agent-100",
     "name": "Ketan",
     "gender": "Male",
