@@ -1921,8 +1921,53 @@ document.addEventListener('DOMContentLoaded', () => {
     if(el){ el.addEventListener('input', updatePreview); el.addEventListener('change', updatePreview); }
   });
 
+  const dcGrid = dcPhone ? dcPhone.closest('.dc-grid') : null;
+  const batchCtl = dcGrid ? CallBatch.attach(dcName, dcPhone, { toggleBefore: dcGrid, extrasAfter: dcGrid }) : null;
+
+  // Batch: one /api/call-direct dispatch per person, everything else in the
+  // form (agent, SIP trunk, amount, date) shared across them.
+  async function dispatchBatch(){
+    const entries = batchCtl.entries();
+    const problem = CallBatch.validate(entries);
+    resultBox.style.display = 'block';
+    if(problem){
+      resultStatus.className = 'rh err';
+      resultStatus.textContent = 'CHECK THE LIST';
+      resultDetails.textContent = problem;
+      return;
+    }
+    btnSend.disabled = true;
+    resultStatus.className = 'rh';
+    resultStatus.textContent = `STATUS: DISPATCHING ${entries.length} CALLS...`;
+    resultDetails.textContent = '';
+    try {
+      const outcome = await CallBatch.run(entries, async (e) => {
+        const res = await fetch('/api/call-direct', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            agentId: dcAgentId.value,
+            customerPhone: e.phone,
+            customerName: e.name,
+            sipId: dcSipId.value,
+            dueAmount: dcAmount.value,
+            dueDate: dcDate.value,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        return res.ok ? { ok: true } : { ok: false, error: data.error || `HTTP ${res.status}` };
+      }, (done, total) => { resultStatus.textContent = `STATUS: DISPATCHED ${done} OF ${total}...`; });
+      resultStatus.className = 'rh' + (outcome.failed.length ? ' err' : '');
+      resultStatus.textContent = outcome.failed.length ? 'PARTIALLY DISPATCHED' : 'ALL CALLS DISPATCHED';
+      resultDetails.textContent = CallBatch.summarize(outcome);
+    } finally {
+      btnSend.disabled = false;
+    }
+  }
+
   if(btnSend){
     btnSend.addEventListener('click', async () => {
+      if(batchCtl && batchCtl.isBatch()) return dispatchBatch();
       btnSend.disabled = true;
       btnSend.textContent = '\u23f3 Dispatching Call via VOIZ API...';
       resultBox.style.display = 'block';

@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const embeddingsClient = require('./embeddingsClient');
+const agentUsage = require('./agentUsage');
 
 const CATALOG_PATH = path.join(__dirname, '..', 'agentCatalog.json');
 const CACHE_PATH = path.join(__dirname, '..', 'data', 'agentCatalogEmbeddings.json');
@@ -70,8 +71,16 @@ async function buildIndex() {
 // needs this to have finished.
 const indexPromise = buildIndex();
 
+// Live (Sarvam) agents carry their real tracked talk time; every other agent
+// is unchanged and keeps its seeded minutesSpoken.
+function withUsage(agent) {
+  if (!agent.appId) return agent;
+  const u = agentUsage.get(agent.appId);
+  return { ...agent, talkSeconds: u.seconds, callsPlaced: u.calls };
+}
+
 function getAllAgents() {
-  return catalog;
+  return catalog.map(withUsage);
 }
 
 // Facet lists come from the data (so they can never offer an option no
@@ -108,7 +117,7 @@ async function search({ query, service, product, stage, objective, language, per
 
   const trimmedQuery = (query || '').trim();
   if (!trimmedQuery) {
-    return { results: candidates.map(c => ({ ...c.agent, score: null })), semantic: false };
+    return { results: candidates.map(c => ({ ...withUsage(c.agent), score: null })), semantic: false };
   }
 
   await indexPromise;
@@ -118,12 +127,12 @@ async function search({ query, service, product, stage, objective, language, per
     // know which mode actually ran.
     const q = trimmedQuery.toLowerCase();
     const filtered = candidates.filter(c => searchTextFor(c.agent).toLowerCase().includes(q));
-    return { results: filtered.map(c => ({ ...c.agent, score: null })), semantic: false, reason: readyError || 'index_not_ready' };
+    return { results: filtered.map(c => ({ ...withUsage(c.agent), score: null })), semantic: false, reason: readyError || 'index_not_ready' };
   }
 
   const queryVector = await embeddingsClient.embedText(trimmedQuery);
   const scored = candidates.map(c => ({
-    ...c.agent,
+    ...withUsage(c.agent),
     score: embeddingsClient.cosineSimilarity(queryVector, vectors[c.index]),
   }));
   scored.sort((a, b) => b.score - a.score);

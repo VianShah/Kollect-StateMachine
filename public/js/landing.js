@@ -47,6 +47,7 @@ document.getElementById('cardLeadX').addEventListener('click', (e) => {
   const submitBtn   = document.getElementById('btnDcallSubmit');
   const statusEl    = document.getElementById('dcallStatus');
   if (!toggleBtn || !overlay) return;
+  const batchCtl = CallBatch.attach(nameInput, phoneInput);
 
   // Which agent this call goes to (2026-09-30 user request) — defaults to
   // Collections every time the panel opens, matching the main app's own
@@ -64,6 +65,7 @@ document.getElementById('cardLeadX').addEventListener('click', (e) => {
 
   function openOverlay(){
     overlay.style.display = 'flex';
+    batchCtl.reset();
     dcallUsecase = 'collections';
     usecaseBtns.forEach(b => b.classList.toggle('active', b.dataset.usecase === 'collections'));
     // Focus after the transition frame, not synchronously — mobile
@@ -78,7 +80,45 @@ document.getElementById('cardLeadX').addEventListener('click', (e) => {
   closeBtn.addEventListener('click', closeOverlay);
   overlay.addEventListener('click', (e) => { if (e.target === overlay) closeOverlay(); });
 
+  // Batch mode: one dispatch per person (up to 5). The backup-agent prompt is
+  // skipped on purpose — a confirm() per person would be unusable — so a
+  // person whose call the primary agent can't place is reported as not placed.
+  async function placeBatch(){
+    const entries = batchCtl.entries();
+    const problem = CallBatch.validate(entries);
+    if (problem) {
+      statusEl.textContent = problem;
+      statusEl.className = 'direct-call-status is-error';
+      return;
+    }
+    submitBtn.disabled = true;
+    statusEl.className = 'direct-call-status';
+    statusEl.textContent = `Calling ${entries.length} people…`;
+    if (window.track) track('landing_batch_call_triggered', { count: entries.length, useCase: dcallUsecase });
+    try {
+      const outcome = await CallBatch.run(entries, async (e) => {
+        const res = await fetch('/api/call', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: e.name, phone: e.phone,
+            voiceId: 'priya', lang: 'hi',
+            archetypeId: 'technical', overdueDays: 12,
+            useCase: dcallUsecase,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        return res.ok && data.call_id ? { ok: true } : { ok: false, error: data.error || 'could not be placed' };
+      }, (done, total) => { statusEl.textContent = `Calling… ${done} of ${total} dispatched`; });
+      statusEl.textContent = CallBatch.summarize(outcome);
+      statusEl.className = 'direct-call-status ' + (outcome.failed.length ? 'is-error' : 'is-ok');
+    } finally {
+      submitBtn.disabled = false;
+    }
+  }
+
   submitBtn.addEventListener('click', async () => {
+    if (batchCtl.isBatch()) return placeBatch();
     const name = nameInput.value.trim();
     const phone = phoneInput.value.trim();
     if (!name || phone.length < 7) {

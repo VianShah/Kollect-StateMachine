@@ -286,6 +286,10 @@ async function handleSarvamOutcome(callId, attempt, appId) {
     transcript: transcriptText,
   });
 
+  // Add this call to its agent's running talk time (shown on the agent's
+  // card in the Agent Library).
+  require('./agentUsage').record(appId, duration, answered);
+
   // Sarvam's attempt record has no VOIZ-style escalation_flag/dispute_flag —
   // this provider never auto-triggers the human-handoff WhatsApp send the
   // way a VOIZ call can (see ESCALATION_FLAGS above).

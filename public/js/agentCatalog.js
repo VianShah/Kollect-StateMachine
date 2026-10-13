@@ -63,6 +63,38 @@ function formatMinutes(mins){
   return `${mins.toLocaleString('en-IN')} min talked`;
 }
 
+// Live agents (the ones with a Sarvam app id) show their real, tracked talk
+// time and call count, which grows as calls placed on them finish. Every
+// other agent keeps its seeded figure.
+function talkLabel(agent){
+  if (!agent.appId) return formatMinutes(agent.minutesSpoken);
+  const secs = agent.talkSeconds || 0;
+  const calls = agent.callsPlaced || 0;
+  if (!calls) return 'No calls yet';
+  const mins = (secs / 60).toFixed(1);
+  return `${mins} min talked · ${calls} ${calls === 1 ? 'call' : 'calls'}`;
+}
+
+// Keeps the totals live: while the Agent Library is open, re-read every live
+// agent's accumulated talk time and update the figures in place (cards and
+// the open detail view) without redrawing, so a form being filled in is never
+// wiped. A finished call shows up within one tick of the server recording it.
+function refreshTalkTimes(){
+  const screen = document.getElementById('screen-agent-catalog');
+  if (!screen || !screen.classList.contains('active')) return;
+  fetch('/api/agent-catalog').then(r => r.json()).then(data => {
+    (data.agents || []).filter(a => a.appId).forEach(fresh => {
+      const known = catalogAgentsById[fresh.id];
+      if (known) { known.talkSeconds = fresh.talkSeconds; known.callsPlaced = fresh.callsPlaced; }
+      const label = talkLabel(fresh);
+      document.querySelectorAll(`.talk-label[data-agent-id="${fresh.id}"]`).forEach(n => {
+        if (n.textContent !== label) n.textContent = label;
+      });
+    });
+  }).catch(() => {});
+}
+setInterval(refreshTalkTimes, 5000);
+
 // Shared by the card and the detail modal: stage + objective as the two
 // highlighted chips (stage only exists on collections agents), products and
 // languages as plain chips below.
@@ -120,7 +152,7 @@ function renderAgentCard(agent){
       </div>
       <div class="agent-card-minutes">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
-        ${formatMinutes(agent.minutesSpoken)}
+        <span class="talk-label" data-agent-id="${agent.id}">${talkLabel(agent)}</span>
         ${agent.appId ? `<span style="margin-left:auto; color:#38bdf8; font-weight:600; display:inline-flex; align-items:center; gap:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Test call</span>` : ''}
       </div>
     </div>`;
@@ -212,7 +244,17 @@ async function runCatalogSearch(){
 }
 
 async function loadAgentCatalog(){
-  if (catalogLoaded) return;
+  // Already loaded: just pull fresh talk times (calls may have finished
+  // since) and redraw with whatever filters/search are active.
+  if (catalogLoaded) {
+    try {
+      const res = await fetch('/api/agent-catalog');
+      const data = await res.json();
+      catalogAllAgents = data.agents || [];
+      runCatalogSearch();
+    } catch (e) { console.error('[agentCatalog] refresh failed', e); }
+    return;
+  }
   catalogLoaded = true;
   try {
     const res = await fetch('/api/agent-catalog');
@@ -265,7 +307,7 @@ function renderAgentModalBody(agent){
     <div class="agent-modal-stats">
       <span>${agent.personaTone} tone${agent.toneNote ? ` &middot; ${agent.toneNote}` : ''}</span>
       <span>${rating}</span>
-      <span>${formatMinutes(agent.minutesSpoken)}</span>
+      <span class="talk-label" data-agent-id="${agent.id}">${talkLabel(agent)}</span>
     </div>
 
     <div class="agent-modal-actions">
@@ -377,7 +419,43 @@ function renderModalPanel(kind, agent, seed){
     const submitBtn = document.getElementById('btnAgentCallSubmit');
     const statusEl = document.getElementById('agentCallStatus');
 
+    const batchCtl = CallBatch.attach(nameIn, phoneIn);
+    const callPayload = (n, p) => ({
+      name: n,
+      phone: p,
+      useCase: agent.line === 'Sales' ? 'sales' : 'collections',
+      agentId: agent.id,
+      sarvamAppId: agent.appId || undefined,
+      sarvamAppVersion: agent.appVersion || undefined,
+    });
+
+    async function placeBatch(){
+      const entries = batchCtl.entries();
+      const problem = CallBatch.validate(entries);
+      if (problem) { statusEl.innerHTML = `<span style="color:var(--red);">${problem}</span>`; return; }
+      submitBtn.disabled = true;
+      statusEl.innerHTML = `<span style="color:var(--blue);">Dialing ${entries.length} people with ${agent.name}...</span>`;
+      try {
+        const outcome = await CallBatch.run(entries, async (e) => {
+          const res = await fetch('/api/call', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(callPayload(e.name, e.phone)),
+          });
+          const data = await res.json().catch(() => ({}));
+          return res.ok && data.call_id ? { ok: true } : { ok: false, error: data.error || 'could not be placed' };
+        }, (done, total) => {
+          statusEl.innerHTML = `<span style="color:var(--blue);">Dialing... ${done} of ${total} dispatched</span>`;
+        });
+        const color = outcome.failed.length ? 'var(--red)' : 'var(--green)';
+        statusEl.innerHTML = `<span style="color:${color};">${outcome.failed.length ? '' : '✓ '}${CallBatch.summarize(outcome).replace(/</g, '&lt;')}</span>`;
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+
     submitBtn.addEventListener('click', async () => {
+      if (batchCtl.isBatch()) return placeBatch();
       const name = nameIn.value.trim() || 'Valued Customer';
       const phone = phoneIn.value.trim();
       if (!phone || phone.replace(/\D/g, '').length < 10) {
