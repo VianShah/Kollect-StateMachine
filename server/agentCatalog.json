@@ -156,6 +156,86 @@
     }
   },
   {
+    "id": "retail-debt-steady",
+    "name": "Anaya",
+    "gender": "Female",
+    "service": "Retail debt collections",
+    "line": "Collections",
+    "products": [
+      "Personal Loan"
+    ],
+    "stage": "Bucket 1",
+    "objective": "Payment collection",
+    "personaTone": "Empathetic",
+    "toneNote": "Safe & slow",
+    "badge": "ICICI Bank",
+    "client": "ICICI Bank",
+    "appId": "ICICI-Bank--458ef434-395c",
+    "appVersion": 1,
+    "variables": ["user_name", "customer_name", "dpd", "emi_amount", "emi_due_date", "outstanding_amount", "overdue_amount", "product_type", "today_date", "prior_context", "link_live", "attempt_no_month"],
+    "values": {
+      "dpd": "12",
+      "emi_amount": "12500",
+      "outstanding_amount": "12500",
+      "overdue_amount": "12500",
+      "product_type": "Personal Loan"
+    },
+    "description": "Safe, unhurried retail collections voice. Builds trust first, explains the overdue EMI patiently and works towards a comfortable payment date without pressure.",
+    "languages": [
+      "Hindi",
+      "English",
+      "Hinglish"
+    ],
+    "rating": 4.7,
+    "status": "Live",
+    "real": true,
+    "provider": "Sarvam (Samvaad)",
+    "minutesSpoken": 2140,
+    "performance": {
+      "latencyMs": 690,
+      "wordsPerMin": 138,
+      "qcScore": 96.1
+    }
+  },
+  {
+    "id": "retail-debt-urgent",
+    "name": "Rhea",
+    "gender": "Female",
+    "service": "Retail debt collections",
+    "line": "Collections",
+    "products": [
+      "Personal Loan"
+    ],
+    "stage": "Bucket 2",
+    "objective": "Payment collection",
+    "personaTone": "Firm",
+    "toneNote": "Fast & urgent",
+    "badge": "ICICI Bank",
+    "client": "ICICI Bank",
+    "appId": "ICICI-snapm-b5437e69-64a8",
+    "appVersion": 3,
+    "variables": ["user_name", "customer_name", "emi_amount", "today_date", "prior_context", "link_live"],
+    "values": {
+      "emi_amount": "12500"
+    },
+    "description": "Fast-paced, urgent retail collections voice. Gets to the point quickly, stresses the cost of further delay and pushes for payment today through the payment link.",
+    "languages": [
+      "Hindi",
+      "English",
+      "Hinglish"
+    ],
+    "rating": 4.5,
+    "status": "Live",
+    "real": true,
+    "provider": "Sarvam (Samvaad)",
+    "minutesSpoken": 1760,
+    "performance": {
+      "latencyMs": 560,
+      "wordsPerMin": 168,
+      "qcScore": 93.4
+    }
+  },
+  {
     "id": "agent-100",
     "name": "Ketan",
     "gender": "Male",

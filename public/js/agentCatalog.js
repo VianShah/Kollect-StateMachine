@@ -115,7 +115,7 @@ function renderAgentCard(agent){
       <div class="agent-card-persona">${agent.description}</div>
       ${agentChipRows(agent)}
       <div class="agent-card-foot">
-        <span>${agent.personaTone} tone</span>
+        <span>${agent.personaTone} tone${agent.toneNote ? ` &middot; ${agent.toneNote}` : ''}</span>
         ${rating}
       </div>
       <div class="agent-card-minutes">
@@ -263,7 +263,7 @@ function renderAgentModalBody(agent){
     <p class="agent-modal-persona">${agent.description}</p>
     ${agentChipRows(agent)}
     <div class="agent-modal-stats">
-      <span>${agent.personaTone} tone</span>
+      <span>${agent.personaTone} tone${agent.toneNote ? ` &middot; ${agent.toneNote}` : ''}</span>
       <span>${rating}</span>
       <span>${formatMinutes(agent.minutesSpoken)}</span>
     </div>
