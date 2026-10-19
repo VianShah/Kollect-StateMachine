@@ -291,7 +291,7 @@
     "badge": "Fatak Pay",
     "client": "Fatak Pay",
     "appId": "Fatak-Pay-K-8ff81271-9c96",
-    "appVersion": 1,
+    "appVersion": 4,
     "variables": ["user_name", "customer_name", "product_type", "link_live", "today_date", "prior_context", "dpd", "emi_amount", "emi_due_date", "outstanding_amount", "overdue_amount", "attempt_no_month"],
     "values": {
       "dpd": "12",
