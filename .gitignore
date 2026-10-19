@@ -30,3 +30,6 @@ Thumbs.db
 .claude/
 .gemini/
 *.tmp
+
+# Render environment export (live secrets)
+render.env
