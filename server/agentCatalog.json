@@ -281,7 +281,7 @@
     "badge": "Mpokket UAT",
     "client": "Mpokket UAT",
     "appId": "Conversatio-c1510ed0-53b4",
-    "appVersion": 2,
+    "appVersion": 5,
     "variables": [
       "customer_name",
       "dpd",
