@@ -119,11 +119,23 @@ async function placeCall({ customerPhone, customerName, overdueDays, useCase, ap
   };
 
   console.log(`[sarvamClient] (${resolvedUseCase}) Posting to Sarvam API ${url}:`, JSON.stringify(payload, null, 2));
-  const { httpStatus, body } = await fetchJson(url, {
+  const send = () => fetchJson(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-API-Key': config.sarvam.apiKey },
     body: JSON.stringify(payload),
   });
+  let { httpStatus, body } = await send();
+  // A newer agent version may have dropped an input. Sarvam names the ones it doesn't know
+  // ("Agent variables '{'a', 'b'}' not found…"); drop exactly those and try once more.
+  const details = body && body.error && body.error.data && body.error.data.details;
+  const unknown = httpStatus === 422 && typeof details === 'string' && /Agent variables .* not found/.test(details)
+    ? [...details.matchAll(/'([A-Za-z0-9_]+)'/g)].map(m => m[1]).filter(k => k in agentVariables)
+    : [];
+  if (unknown.length) {
+    unknown.forEach(k => { delete payload.app_config.agent_variables[k]; });
+    console.warn(`[sarvamClient] ${targetAppId} v${targetAppVersion} doesn't declare ${unknown.join(', ')}; retrying without them.`);
+    ({ httpStatus, body } = await send());
+  }
   console.log(`[sarvamClient] Response HTTP ${httpStatus}:`, JSON.stringify(body, null, 2));
   return { httpStatus, body: { ...body, call_id: body.attempt_id || null }, payloadSent: payload, appId: targetAppId };
 }

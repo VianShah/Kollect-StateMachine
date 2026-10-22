@@ -382,6 +382,43 @@ function insightsFor(agent, seed){
 }
 function pickOne(rand, list){ return list[Math.floor(rand() * list.length)]; }
 
+// Agent versions: calls use the newest published version in Sarvam unless one is pinned here.
+async function fetchVersions(appId, refresh){
+  try {
+    const res = await fetch(`/api/agent-versions?appId=${encodeURIComponent(appId)}${refresh ? '&refresh=1' : ''}`);
+    return res.ok ? await res.json() : null;
+  } catch (_) { return null; }
+}
+
+function mountVersionControl(agent){
+  const sel = document.getElementById('agentVersionSelect');
+  const label = document.getElementById('agentVersionLabel');
+  const note = document.getElementById('agentVersionNote');
+  const refreshBtn = document.getElementById('agentVersionRefresh');
+  const show = (v) => {
+    if (!v) { label.textContent = 'version unknown'; note.textContent = 'Couldn’t reach Sarvam to check versions.'; return; }
+    label.textContent = `v${v.active} (${v.mode === 'pinned' ? 'pinned' : 'latest'})`;
+    sel.innerHTML = `<option value="">Latest, automatic (now v${v.latest})</option>${v.versions.map((n) => `<option value="${n}">Pin v${n}${n === v.latest ? ' (latest)' : ''}</option>`).join('')}`;
+    sel.value = v.mode === 'pinned' ? String(v.pinned) : '';
+    sel.disabled = false;
+    note.textContent = v.mode === 'pinned' ? `Calls stay on v${v.pinned} until you switch back to latest.` : 'New versions are picked up automatically.';
+  };
+  fetchVersions(agent.appId).then(show);
+  refreshBtn.addEventListener('click', async () => {
+    refreshBtn.disabled = true; note.textContent = 'Checking Sarvam…';
+    show(await fetchVersions(agent.appId, true));
+    refreshBtn.disabled = false;
+  });
+  sel.addEventListener('change', async () => {
+    sel.disabled = true; note.textContent = 'Saving…';
+    try {
+      const res = await fetch('/api/agent-versions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ appId: agent.appId, version: sel.value ? Number(sel.value) : null }) });
+      const data = await res.json();
+      if (res.ok) show(data); else { note.textContent = data.error || 'Couldn’t change the version.'; sel.disabled = false; }
+    } catch (_) { note.textContent = 'Couldn’t reach the server.'; sel.disabled = false; }
+  });
+}
+
 function renderModalPanel(kind, agent, seed){
   const panel = document.getElementById('agentModalPanel');
   if (kind === 'call') {
@@ -392,11 +429,18 @@ function renderModalPanel(kind, agent, seed){
           <div>
             <strong>Direct test call with ${agent.name}</strong>
             <div class="modal-call-meta">
-              ${isLiveSarvam ? `Connected to Sarvam App: <code>${agent.appId}</code> (v${agent.appVersion || 1})` : `Dispatches via ${agent.provider || 'default provider'}`}
+              ${isLiveSarvam ? `Connected to Sarvam App: <code>${agent.appId}</code> · <span id="agentVersionLabel">checking version…</span>` : `Dispatches via ${agent.provider || 'default provider'}`}
             </div>
           </div>
           ${agent.badge ? `<span class="agent-badge-client"><span class="badge-dot"></span>${agent.badge}</span>` : ''}
         </div>
+        ${isLiveSarvam ? `
+        <div style="margin-top:12px; display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:12px;">
+          <label for="agentVersionSelect" style="color:var(--text-faint);">Agent version</label>
+          <select id="agentVersionSelect" class="catalog-filter-select" style="height:32px; min-width:170px;" disabled><option>Checking…</option></select>
+          <button type="button" id="agentVersionRefresh" class="catalog-filter-select" style="height:32px; cursor:pointer;">Check for a new version</button>
+          <span id="agentVersionNote" style="color:var(--text-faint);"></span>
+        </div>` : ''}
 
         <div style="margin-top:14px; display:flex; flex-direction:column; gap:10px;">
           <div>
@@ -414,6 +458,7 @@ function renderModalPanel(kind, agent, seed){
         </div>
       </div>`;
 
+    if (isLiveSarvam) mountVersionControl(agent);
     const nameIn = document.getElementById('agentCallName');
     const phoneIn = document.getElementById('agentCallPhone');
     const submitBtn = document.getElementById('btnAgentCallSubmit');
@@ -507,6 +552,19 @@ function renderModalPanel(kind, agent, seed){
           <div class="insight-main"><div class="l">${i.label}</div><div class="d">${i.desc}</div></div>
           <div class="insight-val">${i.value}</div>
         </div>`).join('')}</div>`;
+    return;
+  }
+  if (kind === 'history' && agent.appId) {
+    // Live agents: the real versions in Sarvam, with the one calls use marked.
+    panel.innerHTML = '<div class="modal-panel-list"><div class="modal-panel-row"><div class="modal-panel-row-note">Checking versions in Sarvam…</div></div></div>';
+    fetchVersions(agent.appId).then((v) => {
+      if (!v) { panel.innerHTML = '<div class="modal-panel-list"><div class="modal-panel-row"><div class="modal-panel-row-note">Couldn’t reach Sarvam to list versions.</div></div></div>'; return; }
+      panel.innerHTML = `<div class="modal-panel-list">${v.versions.map((n) => `
+        <div class="modal-panel-row">
+          <div class="modal-panel-row-top"><strong>v${n}</strong>${n === v.active ? `<span class="modal-panel-tag">In use${v.mode === 'pinned' ? ' · pinned' : ' · latest'}</span>` : n === v.latest ? '<span class="modal-panel-tag">Latest</span>' : ''}</div>
+          <div class="modal-panel-row-note">${n === v.latest ? 'Newest published version in Sarvam.' : 'Earlier published version. Pin it from the Test call tab if you need it.'}</div>
+        </div>`).join('')}</div>`;
+    });
     return;
   }
   if (kind === 'history') {

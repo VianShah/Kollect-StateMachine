@@ -50,6 +50,16 @@ router.post('/call', async (req, res) => {
     } catch (_) {}
   }
 
+  // Agent Library agents always run the newest published version in Sarvam,
+  // or the version pinned in the library, whatever the browser sent.
+  if (targetSarvamAppId) {
+    const libraryAgent = require('../agentCatalog.json').find(a => a.appId === targetSarvamAppId);
+    if (libraryAgent) {
+      const v = await require('../lib/agentVersions').resolve(libraryAgent.appId, libraryAgent.appVersion);
+      targetSarvamAppVersion = v.active;
+    }
+  }
+
   // Two Sarvam agents as of 2026-09-30: Collections (original) and Sales
   // (new). `useCase` ('collections' default, or 'sales') picks which one —
   // see server/lib/sarvamClient.js for the very different agent_variables
