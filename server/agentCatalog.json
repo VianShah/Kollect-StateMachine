@@ -424,6 +424,43 @@
     }
   },
   {
+    "id": "sayyam-finance",
+    "name": "Sayyam Finance",
+    "gender": "Female",
+    "service": "Retail debt collections",
+    "line": "Collections",
+    "products": [
+      "Personal Loan"
+    ],
+    "stage": "Bucket 1",
+    "objective": "Payment collection",
+    "personaTone": "Professional",
+    "badge": "Sayyam Finance",
+    "client": "Sayyam Finance",
+    "appId": "Conversatio-bb1709dd-6988",
+    "appVersion": 6,
+    "variables": ["user_name", "customer_name", "emi_amount", "today_date", "prior_context", "link_live"],
+    "values": {
+      "emi_amount": "4500"
+    },
+    "description": "Collections voice for Sayyam Finance. Confirms the borrower, states the pending EMI and agrees a payment date or sends the payment link.",
+    "languages": [
+      "Hindi",
+      "English",
+      "Hinglish"
+    ],
+    "rating": null,
+    "status": "Live",
+    "real": true,
+    "provider": "Sarvam (Samvaad)",
+    "minutesSpoken": 0,
+    "performance": {
+      "latencyMs": 620,
+      "wordsPerMin": 150,
+      "qcScore": 93.0
+    }
+  },
+  {
     "id": "snapmint-call-forwarding",
     "name": "Call forwarding Snapmint agent",
     "gender": "Female",
