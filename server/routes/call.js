@@ -9,6 +9,7 @@ const store = require('../lib/store');
 const callPoller = require('../lib/callPoller');
 
 const router = express.Router();
+const DEFAULT_COLLECTIONS_AGENT_ID = 'snapmint-prod';
 
 // Standard call endpoint (used by dashboard workflow). Which VOIZ agent gets
 // dialed is resolved here from the orb the attendee picked — the client only
@@ -47,6 +48,16 @@ router.post('/call', async (req, res) => {
         targetSarvamAppId = found.appId;
         targetSarvamAppVersion = found.appVersion || 1;
       }
+    } catch (_) {}
+  }
+
+  // Kollect state machine sends no agent: collections calls default to the
+  // Snapmint Prod library agent (its appId, version, variables and static
+  // values all come from agentCatalog.json), not SARVAM_APP_ID_COLLECTIONS.
+  if (!targetSarvamAppId && useCase !== 'sales') {
+    try {
+      const def = require('../agentCatalog.json').find(a => a.id === DEFAULT_COLLECTIONS_AGENT_ID);
+      if (def && def.appId) { targetSarvamAppId = def.appId; targetSarvamAppVersion = def.appVersion || 1; }
     } catch (_) {}
   }
 
