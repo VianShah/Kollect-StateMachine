@@ -84,7 +84,7 @@ test('defaults fill every variable of the approved templates', async () => {
   const r = await whatsapp.sendTemplate('paymentReminder', { to: '+919876543210', vars: { message: 'm', name: 'Asha', phone: '+919876543210' } });
   assert.equal(r.status, 'sent');
   assert.deepEqual(calls[0].body.template.components[0].parameters.map(p => p.text),
-    ['Asha', '45000', '1 days', 'https://snapmint.example/pay']);
+    ['Asha', '45000', '1 days', 'https://predixion.ai']);
   calls.length = 0;
   await whatsapp.sendTemplate('escalation', { to: '+910000000000', vars: { message: 'Disputed charge', name: 'Asha', phone: '+919876543210' } });
   assert.deepEqual(calls[0].body.template.components[0].parameters.map(p => p.text), ['Asha', 'Disputed charge', '+919876543210']);

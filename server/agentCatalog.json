@@ -489,7 +489,7 @@
       "emi_amount": "4500",
       "today_date": "2026-11-25",
       "prior_context": "First reminder call from SnapMint about an overdue BNPL EMI.",
-      "link_live": "https://snapmint.example/pay"
+      "link_live": "https://predixion.ai"
     },
     "description": "SnapMint production collections voice. Confirms the borrower, states the pending EMI and agrees a payment date or sends the payment link.",
     "languages": [

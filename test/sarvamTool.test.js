@@ -53,7 +53,7 @@ test('sends via Meta for an active Sarvam call, then dedupes', async () => {
   assert.equal(sent.length, 1);
   assert.equal(sent[0].body.to, '919876500004');
   assert.deepEqual(sent[0].body.template.components[0].parameters.map(p => p.text),
-    ['Asha', '4500', '1 days', 'https://snapmint.example/pay']);
+    ['Asha', '4500', '1 days', 'https://predixion.ai']);
   const again = await post({ phone: '9876500004' });
   assert.equal(again.body.status, 'already_sent');
   assert.equal(sent.length, 1);

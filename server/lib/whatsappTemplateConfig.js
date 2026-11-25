@@ -62,7 +62,7 @@ function renderParams(params, vars) {
   const v = {
     amount: String(config.demo.dueAmount),
     overdue: '1',
-    link: process.env.WHATSAPP_PAYMENT_LINK || 'https://snapmint.example/pay',
+    link: process.env.WHATSAPP_PAYMENT_LINK || 'https://predixion.ai',
     ...(vars || {}),
   };
   return params.map(p => String(p).replace(/\{\{(message|name|phone|amount|overdue|link)\}\}/g, (_, k) => (v[k] != null ? v[k] : '')));
