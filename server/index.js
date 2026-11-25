@@ -11,6 +11,7 @@ const whatsappWebhookRoutes = require('./routes/whatsappWebhook');
 const telemetryRoutes = require('./routes/telemetry');
 const agentCatalogRoutes = require('./routes/agentCatalog');
 const metaWhatsappWebhookRoutes = require('./routes/metaWhatsappWebhook');
+const sarvamToolRoutes = require('./routes/sarvamTool');
 
 
 const app = express();
@@ -29,6 +30,7 @@ app.use('/api', whatsappRoutes);
 app.use('/api', whatsappWebhookRoutes);
 app.use('/api', telemetryRoutes);
 app.use('/api', agentCatalogRoutes);
+app.use('/api', sarvamToolRoutes);
 // Test-only Meta WhatsApp webhook, at the root path Meta was given (/whatsapp/webhook).
 app.use('/', metaWhatsappWebhookRoutes);
 

@@ -482,7 +482,8 @@
       "emi_amount",
       "today_date",
       "prior_context",
-      "link_live"
+      "link_live",
+      "user_phone"
     ],
     "values": {
       "emi_amount": "4500",

@@ -57,7 +57,7 @@ async function sendTemplate(templateKey, { to, caseKey, vars }) {
   // dashboard's saved choice (whatsappTemplateConfig), defaulting to tpl.
   if (useMeta()) {
     const chosen = templateConfig.get(templateKey);
-    const params = templateConfig.renderParams(chosen.params, { message: (vars && vars.message) || '', name: (vars && vars.name) || '', phone: (vars && vars.phone) || to });
+    const params = templateConfig.renderParams(chosen.params, { ...(vars || {}), message: (vars && vars.message) || '', name: (vars && vars.name) || '', phone: (vars && vars.phone) || to });
     if (modeState.getMode() !== 'live') {
       console.log(`[whatsapp:mock] would send Meta template "${chosen.name}" (${chosen.language}) to ${meta.maskNumber(to)}`);
       return { mode: 'mock', provider: 'meta', to, template: chosen.name, params, status: 'sent', sentAt: new Date().toISOString() };

@@ -90,6 +90,7 @@ async function placeCall({ customerPhone, customerName, overdueDays, useCase, ap
     prior_context: 'First reminder call from XYZ Bank about an overdue personal loan EMI.',
     link_live: 'https://xyzbank.example/pay',
     attempt_no_month: '1',
+    user_phone: customerPhone,
   };
   if (values) {
     // Per-agent demo data (catalog `values`) overrides the generic set. The
