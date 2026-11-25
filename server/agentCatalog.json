@@ -485,8 +485,6 @@
       "link_live"
     ],
     "values": {
-      "user_name": "Valued Customer",
-      "customer_name": "Valued Customer",
       "emi_amount": "4500",
       "today_date": "2026-11-25",
       "prior_context": "First reminder call from SnapMint about an overdue BNPL EMI.",
