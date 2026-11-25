@@ -90,3 +90,10 @@ test('defaults fill every variable of the approved templates', async () => {
   assert.deepEqual(calls[0].body.template.components[0].parameters.map(p => p.text), ['Asha', 'Disputed charge', '+919876543210']);
   assert.equal(calls[0].body.template.name, 'kollect_demo_case_escalation');
 });
+
+test('WHATSAPP_MODE is case-insensitive ("Live" on Render)', () => {
+  const { execFileSync } = require('node:child_process');
+  const out = execFileSync(process.execPath, ['-e', "console.log(require('./server/config').whatsapp.mode)"],
+    { cwd: require('node:path').join(__dirname, '..'), env: { ...process.env, WHATSAPP_MODE: 'Live' } }).toString().trim();
+  assert.equal(out, 'live');
+});

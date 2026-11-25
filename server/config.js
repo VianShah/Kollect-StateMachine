@@ -133,7 +133,7 @@ module.exports = {
     // Stays 'mock' until you flip it — real sends cost money per PRD §8,
     // and nobody should flip this without deliberately deciding to.
     // WHATSAPP_ENABLED=true (set on Render with the Meta vars) also means live.
-    mode: process.env.WHATSAPP_MODE || (process.env.WHATSAPP_ENABLED === 'true' ? 'live' : 'mock'), // 'mock' | 'live'
+    mode: String(process.env.WHATSAPP_MODE || (process.env.WHATSAPP_ENABLED === 'true' ? 'live' : 'mock')).trim().toLowerCase(), // 'mock' | 'live' (case-insensitive: Render had "Live")
     // 'meta' (direct WhatsApp Cloud API) is primary whenever its credentials
     // are present; Vobiz is the automatic fallback when a Meta send fails.
     // Force one with WHATSAPP_PROVIDER=meta|vobiz.
