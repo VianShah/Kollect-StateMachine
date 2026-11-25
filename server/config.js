@@ -132,8 +132,22 @@ module.exports = {
   whatsapp: {
     // Stays 'mock' until you flip it — real sends cost money per PRD §8,
     // and nobody should flip this without deliberately deciding to.
-    mode: process.env.WHATSAPP_MODE || 'mock', // 'mock' | 'live'
-    provider: process.env.WHATSAPP_PROVIDER || 'vobiz',
+    // WHATSAPP_ENABLED=true (set on Render with the Meta vars) also means live.
+    mode: process.env.WHATSAPP_MODE || (process.env.WHATSAPP_ENABLED === 'true' ? 'live' : 'mock'), // 'mock' | 'live'
+    // 'meta' (direct WhatsApp Cloud API) is primary whenever its credentials
+    // are present; Vobiz is the automatic fallback when a Meta send fails.
+    // Force one with WHATSAPP_PROVIDER=meta|vobiz.
+    provider: process.env.WHATSAPP_PROVIDER
+      || (process.env.META_WA_ACCESS_TOKEN && process.env.META_WA_PHONE_NUMBER_ID ? 'meta' : 'vobiz'),
+    meta: {
+      accessToken: process.env.META_WA_ACCESS_TOKEN || '',
+      phoneNumberId: process.env.META_WA_PHONE_NUMBER_ID || '',
+      // The WhatsApp Business Account that owns the templates. Verified
+      // against Graph 2026-11-25: META_WA_MESSAGING_ACC_ID is the real WABA;
+      // META_WA_WABA_ID points at the Business portfolio and has no templates.
+      wabaId: process.env.META_WA_TEMPLATES_WABA_ID || process.env.META_WA_MESSAGING_ACC_ID || process.env.META_WA_WABA_ID || '',
+      apiVersion: process.env.META_WA_API_VERSION || 'v20.0',
+    },
     authId: process.env.WHATSAPP_AUTH_ID || '',
     authToken: process.env.WHATSAPP_AUTH_TOKEN || '',
     channelId: process.env.WHATSAPP_CHANNEL_ID || '',

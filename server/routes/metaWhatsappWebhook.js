@@ -25,7 +25,7 @@ router.get('/whatsapp/webhook', (req, res) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
-  const expected = process.env.WHATSAPP_VERIFY_TOKEN;
+  const expected = process.env.WHATSAPP_VERIFY_TOKEN || process.env.META_WA_VERIFY_TOKEN;
 
   if (expected && mode === 'subscribe' && token && safeEqual(token, expected)) {
     console.log('[metaWebhook] verification succeeded');
@@ -38,7 +38,7 @@ router.get('/whatsapp/webhook', (req, res) => {
 // Meta signs the raw request body: X-Hub-Signature-256: sha256=<hex HMAC-SHA256
 // with the app secret>. req.rawBody is captured by express.json in index.js.
 function validMetaSignature(req) {
-  const secret = process.env.WHATSAPP_APP_SECRET;
+  const secret = process.env.WHATSAPP_APP_SECRET || process.env.META_APP_SECRET;
   const header = req.get('X-Hub-Signature-256');
   if (!secret || !header || !req.rawBody) return false;
   const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(req.rawBody).digest('hex');
@@ -46,7 +46,7 @@ function validMetaSignature(req) {
 }
 
 router.post('/whatsapp/webhook', (req, res) => {
-  if (!process.env.WHATSAPP_APP_SECRET) {
+  if (!(process.env.WHATSAPP_APP_SECRET || process.env.META_APP_SECRET)) {
     console.error('[metaWebhook] WHATSAPP_APP_SECRET not set: rejecting, cannot verify the signature');
     return res.sendStatus(503);
   }

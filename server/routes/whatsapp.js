@@ -1,6 +1,8 @@
 const express = require('express');
 const config = require('../config');
 const whatsapp = require('../lib/whatsapp');
+const meta = require('../lib/metaWhatsapp');
+const templateConfig = require('../lib/whatsappTemplateConfig');
 
 const router = express.Router();
 
@@ -28,7 +30,7 @@ router.post('/whatsapp/send', async (req, res) => {
       result = await whatsapp.sendTemplate('escalation', {
         to: config.whatsapp.humanAgentNumber,
         caseKey: phone || name,
-        vars: { message },
+        vars: { message, name, phone },
       });
     } else if (templateKey === 'paymentReminder' || templateKey === 'followup') {
       if (!phone) return res.status(400).json({ error: 'phone is required for this templateKey' });
@@ -38,7 +40,7 @@ router.post('/whatsapp/send', async (req, res) => {
       result = await whatsapp.sendTemplate(templateKey, {
         to: formattedPhone,
         caseKey: formattedPhone,
-        vars: { message },
+        vars: { message, name, phone: formattedPhone },
       });
     } else {
       return res.status(400).json({ error: `unknown templateKey: ${templateKey}` });
@@ -48,6 +50,34 @@ router.post('/whatsapp/send', async (req, res) => {
   } catch (err) {
     console.error('[whatsapp route] error', err);
     res.status(502).json({ error: 'WhatsApp send failed', detail: String(err) });
+  }
+});
+
+// Dashboard template picker: approved Meta templates + the saved choice per
+// step (paymentReminder / followup / escalation). Applies to the next send.
+router.get('/whatsapp/templates', async (req, res) => {
+  const list = await meta.listTemplates({ refresh: req.query.refresh === '1' });
+  const selected = {};
+  templateConfig.KEYS.forEach(k => { selected[k] = templateConfig.get(k); });
+  res.json({ provider: config.whatsapp.provider, mode: whatsapp.modeState.getMode(), ...list, selected });
+});
+
+router.post('/whatsapp/template-config', async (req, res) => {
+  const { templateKey, name, language, params, reset } = req.body || {};
+  try {
+    if (reset) return res.json({ selected: templateConfig.reset(templateKey) });
+    const list = await meta.listTemplates();
+    const found = list.templates.find(t => t.name === name && t.language === language);
+    if (list.templates.length && !found) {
+      return res.status(400).json({ error: `"${name}" (${language}) is not an approved template on this WhatsApp account` });
+    }
+    if (found && !found.usable) return res.status(400).json({ error: 'This template has a media/header or named variables and cannot be sent from the dashboard' });
+    if (found && (params || []).length !== found.paramCount) {
+      return res.status(400).json({ error: `This template needs ${found.paramCount} variable(s), got ${(params || []).length}` });
+    }
+    res.json({ selected: templateConfig.set(templateKey, { name, language, params }) });
+  } catch (err) {
+    res.status(400).json({ error: String(err.message || err) });
   }
 });
 

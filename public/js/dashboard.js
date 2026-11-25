@@ -2050,3 +2050,71 @@ document.addEventListener('DOMContentLoaded', () => {
     if(e.key === 'Escape' && modal.style.display !== 'none') closeDetailsModal();
   });
 });
+
+/* =========================================================
+   WHATSAPP TEMPLATE PICKER — /api/whatsapp/templates, /template-config
+   Pick which approved Meta template (and its {{n}} values) each step sends,
+   while a call is running. Applies to the next send; nothing is sent here.
+   Values may use {{message}}, {{name}} and {{phone}}.
+========================================================= */
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('btnWhatsappTemplates');
+  if(!btn) return;
+  const STEPS = [
+    ['paymentReminder', 'Round 1 · reminder to borrower'],
+    ['followup', 'Round 2 · follow-up to borrower'],
+    ['escalation', 'Hand-off · alert to human agent'],
+  ];
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  async function open(refresh){
+    let data;
+    try { data = await (await fetch('/api/whatsapp/templates' + (refresh ? '?refresh=1' : ''))).json(); }
+    catch(e){ alert('Could not load templates'); return; }
+    document.getElementById('waTplModal')?.remove();
+    const wrap = document.createElement('div');
+    wrap.id = 'waTplModal';
+    wrap.style.cssText = 'position:fixed;inset:0;background:rgba(2,36,64,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;font-family:Arial,sans-serif';
+    const tpls = data.templates || [];
+    const rows = STEPS.map(([key, label]) => {
+      const sel = (data.selected || {})[key] || {};
+      const opts = tpls.map(t => `<option value="${esc(t.name)}|${esc(t.language)}" ${t.name === sel.name && t.language === sel.language ? 'selected' : ''} ${t.usable ? '' : 'disabled'}>${esc(t.name)} (${esc(t.language)}, ${esc(t.category)}${t.usable ? '' : ', unsupported'})</option>`).join('');
+      return `<div style="margin:0 0 16px" data-key="${key}"><div style="font-weight:700;margin-bottom:6px">${label}</div>
+        <select class="waTplSel" style="width:100%;padding:6px">${opts || `<option>${esc(sel.name || 'none')}</option>`}</select>
+        <div class="waTplBody" style="font-size:12px;opacity:.75;margin:6px 0"></div>
+        <div class="waTplParams"></div></div>`;
+    }).join('');
+    wrap.innerHTML = `<div style="background:#fff;color:#022440;border-radius:10px;max-width:560px;width:100%;max-height:90vh;overflow:auto;padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b style="font-size:16px">WhatsApp templates</b><button id="waTplClose" style="border:0;background:none;font-size:20px;cursor:pointer">&times;</button></div>
+      <div style="font-size:12px;margin-bottom:14px">Provider: <b>${esc(data.provider)}</b> · Mode: <b>${esc(data.mode)}</b>${data.error ? ` · <span style="color:#D95F4B">${esc(data.error)}</span>` : ''}${data.configured === false ? ' · <span style="color:#D95F4B">Meta not configured</span>' : ''}</div>
+      ${rows}
+      <div style="display:flex;gap:8px;justify-content:flex-end"><button id="waTplRefresh" style="padding:8px 12px">Refresh list</button><button id="waTplSave" style="padding:8px 14px;background:#0B9E84;color:#fff;border:0;border-radius:6px;font-weight:700">Save</button></div>
+      <div id="waTplMsg" style="font-size:12px;margin-top:10px"></div></div>`;
+    document.body.appendChild(wrap);
+
+    function fill(block){
+      const [name, language] = block.querySelector('.waTplSel').value.split('|');
+      const t = tpls.find(x => x.name === name && x.language === language);
+      const sel = (data.selected || {})[block.dataset.key] || {};
+      block.querySelector('.waTplBody').textContent = t ? t.body : '';
+      const n = t ? t.paramCount : 0;
+      const keep = sel.name === name && sel.language === language ? (sel.params || []) : [];
+      block.querySelector('.waTplParams').innerHTML = Array.from({ length: n }, (_, i) =>
+        `<input data-i="${i}" placeholder="{{${i+1}}} value" value="${esc(keep[i] != null ? keep[i] : (i === 0 ? '{{message}}' : ''))}" style="width:100%;padding:6px;margin:2px 0">`).join('');
+    }
+    wrap.querySelectorAll('[data-key]').forEach(b => { fill(b); b.querySelector('.waTplSel').addEventListener('change', () => fill(b)); });
+    wrap.querySelector('#waTplClose').onclick = () => wrap.remove();
+    wrap.querySelector('#waTplRefresh').onclick = () => open(true);
+    wrap.querySelector('#waTplSave').onclick = async () => {
+      const msg = wrap.querySelector('#waTplMsg'); msg.textContent = 'Saving…';
+      for(const b of wrap.querySelectorAll('[data-key]')){
+        const [name, language] = b.querySelector('.waTplSel').value.split('|');
+        const params = Array.from(b.querySelectorAll('.waTplParams input')).map(i => i.value);
+        const res = await fetch('/api/whatsapp/template-config', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ templateKey: b.dataset.key, name, language, params }) });
+        if(!res.ok){ msg.style.color = '#D95F4B'; msg.textContent = `${b.dataset.key}: ${(await res.json()).error}`; return; }
+      }
+      msg.style.color = '#0B9E84'; msg.textContent = 'Saved. Applies to the next WhatsApp send.';
+    };
+  }
+  btn.addEventListener('click', () => open(false));
+});

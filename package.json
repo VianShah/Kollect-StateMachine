@@ -2,11 +2,12 @@
   "name": "kollect-gff-demo",
   "version": "0.1.0",
   "private": true,
-  "description": "Kollect GFF 2026 booth demo — thin backend layer over VOIZ for the live dashboard",
+  "description": "Kollect GFF 2026 booth demo \u2014 thin backend layer over VOIZ for the live dashboard",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
-    "dev": "node --watch server/index.js"
+    "dev": "node --watch server/index.js",
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "express": "^4.19.2",
