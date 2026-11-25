@@ -461,8 +461,8 @@
     }
   },
   {
-    "id": "snapmint-call-forwarding",
-    "name": "Call forwarding Snapmint agent",
+    "id": "snapmint-prod",
+    "name": "Snapmint Prod",
     "gender": "Female",
     "service": "Retail debt collections",
     "line": "Collections",
@@ -474,8 +474,8 @@
     "personaTone": "Professional",
     "badge": "SnapMint",
     "client": "SnapMint",
-    "appId": "SnapMint-Ko-328fab61-cb49",
-    "appVersion": 3,
+    "appId": "Snampint-Pr-f9e99bbc-8a68",
+    "appVersion": 1,
     "variables": [
       "user_name",
       "customer_name",
@@ -485,9 +485,14 @@
       "link_live"
     ],
     "values": {
-      "emi_amount": "4500"
+      "user_name": "Valued Customer",
+      "customer_name": "Valued Customer",
+      "emi_amount": "4500",
+      "today_date": "2026-11-25",
+      "prior_context": "First reminder call from SnapMint about an overdue BNPL EMI.",
+      "link_live": "https://snapmint.example/pay"
     },
-    "description": "SnapMint collections voice with call forwarding. Confirms the borrower, states the pending EMI and, when the borrower asks for a person, transfers the call to a human agent.",
+    "description": "SnapMint production collections voice. Confirms the borrower, states the pending EMI and agrees a payment date or sends the payment link.",
     "languages": [
       "Hindi",
       "English",
