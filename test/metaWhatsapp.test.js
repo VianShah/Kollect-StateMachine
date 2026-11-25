@@ -96,4 +96,7 @@ test('WHATSAPP_MODE is case-insensitive ("Live" on Render)', () => {
   const out = execFileSync(process.execPath, ['-e', "console.log(require('./server/config').whatsapp.mode)"],
     { cwd: require('node:path').join(__dirname, '..'), env: { ...process.env, WHATSAPP_MODE: 'Live' } }).toString().trim();
   assert.equal(out, 'live');
+  const prov = execFileSync(process.execPath, ['-e', "console.log(require('./server/config').whatsapp.provider)"],
+    { cwd: require('node:path').join(__dirname, '..'), env: { ...process.env, WHATSAPP_PROVIDER: 'Meta' } }).toString().trim();
+  assert.equal(prov, 'meta');
 });

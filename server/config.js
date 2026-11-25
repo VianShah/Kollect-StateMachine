@@ -137,8 +137,8 @@ module.exports = {
     // 'meta' (direct WhatsApp Cloud API) is primary whenever its credentials
     // are present; Vobiz is the automatic fallback when a Meta send fails.
     // Force one with WHATSAPP_PROVIDER=meta|vobiz.
-    provider: process.env.WHATSAPP_PROVIDER
-      || (process.env.META_WA_ACCESS_TOKEN && process.env.META_WA_PHONE_NUMBER_ID ? 'meta' : 'vobiz'),
+    provider: String(process.env.WHATSAPP_PROVIDER
+      || (process.env.META_WA_ACCESS_TOKEN && process.env.META_WA_PHONE_NUMBER_ID ? 'meta' : 'vobiz')).trim().toLowerCase(),
     meta: {
       accessToken: process.env.META_WA_ACCESS_TOKEN || '',
       phoneNumberId: process.env.META_WA_PHONE_NUMBER_ID || '',
